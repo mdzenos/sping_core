@@ -13,7 +13,6 @@ target/
 .springBeans
 .sts4-cache
 
-.env
 ### IntelliJ IDEA ###
 .idea
 *.iws
@@ -32,3 +31,16 @@ build/
 
 ### VS Code ###
 .vscode/
+
+# Ignore local Maven repository jars and poms
+.m2/
+
+# Ignore all jar files in project root
+*.jar
+*.log
+
+.env
+.DS_Store
+Thumbs.db
+
+

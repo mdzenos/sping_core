@@ -1,0 +1,28 @@
+# Maven target directory
+target/
+
+# Maven local repository (nếu bạn mount volume .m2 khi build, thì có thể bỏ qua)
+.m2/
+
+# IDE configs
+.idea/
+*.iml
+.vscode/
+
+# Logs
+*.log
+
+# Git files
+.git
+.gitignore
+
+# Environment files (chỉ khi bạn mount ở runtime, không nên copy vào image)
+.env
+
+# Docker files themselves (optional)
+Dockerfile
+docker-compose.yml
+
+# OS files
+.DS_Store
+Thumbs.db

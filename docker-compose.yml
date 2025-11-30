@@ -1,18 +1,44 @@
 services:
-  spring-core:
+  spring-core-jar:
     image: mdzenos/spring-core:1.0
-    container_name: spring-core
-    # restart: always
+    container_name: spring-core-jar
     ports:
       - "${APP_PORT:-8000}:8000"
+    env_file:
+      - .env
     environment:
       - "${DB_HOST:-localhost}"
       - "${DB_PORT:-5432}"
       - "${DB_NAME:-mydb}"
       - "${DB_USER:-postgres}"
       - "${DB_PASS:-yourpassword}"
+    networks:
+      - shared_network_144
+
+  spring-core-code:
+    image: mdzenos/spring-core:1.0
+    container_name: spring-core-code
+    entrypoint: ""
+    working_dir: /app
+    volumes:
+      - ./src:/app/src
+      - ./pom.xml:/app/pom.xml
+      - ./.m2:/root/.m2
+    ports:
+      - "${DEV_PORT:-8001}:8000"
     env_file:
       - .env
+    environment:
+      - "${DB_HOST:-localhost}"
+      - "${DB_PORT:-5432}"
+      - "${DB_NAME:-mydb}"
+      - "${DB_USER:-postgres}"
+      - "${DB_PASS:-yourpassword}"
+    command: >
+      bash -c "while inotifywait -e modify,create,delete -r src/; do
+                mvn compile;
+              done &
+              mvn spring-boot:run -Dspring-boot.run.fork=false -Dserver.port=8000"
     networks:
       - shared_network_144
 
