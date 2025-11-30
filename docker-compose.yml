@@ -1,0 +1,22 @@
+services:
+  spring-core:
+    image: mdzenos/spring-core:1.0
+    container_name: spring-core
+    # restart: always
+    ports:
+      - "${APP_PORT:-8000}:8000"
+    environment:
+      - "${DB_HOST:-localhost}"
+      - "${DB_PORT:-5432}"
+      - "${DB_NAME:-mydb}"
+      - "${DB_USER:-postgres}"
+      - "${DB_PASS:-yourpassword}"
+    env_file:
+      - .env
+    networks:
+      - shared_network_144
+
+networks:
+  shared_network_144:
+    external: true
+    name: shared_network_144
