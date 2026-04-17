@@ -1,48 +1,91 @@
 services:
-  spring-core-jar:
-    image: mdzenos/spring-core:1.0
-    container_name: spring-core-jar
+  spring-prod:
+    image: mdzenos/spring_core:1.0
+    container_name: spring-prod
     ports:
-      - "${APP_PORT:-8000}:8000"
+      - '${APP_PORT:-8000}:8000'
     env_file:
       - .env
     environment:
-      - "${DB_HOST:-localhost}"
-      - "${DB_PORT:-5432}"
-      - "${DB_NAME:-mydb}"
-      - "${DB_USER:-postgres}"
-      - "${DB_PASS:-yourpassword}"
+      DB_HOST: ${DB_HOST:-localhost}
+      DB_PORT: ${DB_PORT:-5432}
+      DB_NAME: ${DB_NAME:-mydb}
+      DB_USER: ${DB_USER:-postgres}
+      DB_PASS: ${DB_PASS:-yourpassword}
     networks:
       - shared_network_144
+    profiles:
+      - prod
 
-  spring-core-code:
-    image: mdzenos/spring-core:1.0
-    container_name: spring-core-code
-    entrypoint: ""
+  spring-dev:
+    image: mdzenos/spring_core:1.0
+    container_name: spring-dev
+    entrypoint: ''
     working_dir: /app
     volumes:
       - ./src:/app/src
       - ./pom.xml:/app/pom.xml
       - ./.m2:/root/.m2
     ports:
-      - "${DEV_PORT:-8001}:8000"
+      - '${DEV_PORT:-8001}:8000'
     env_file:
       - .env
     environment:
-      - "${DB_HOST:-localhost}"
-      - "${DB_PORT:-5432}"
-      - "${DB_NAME:-mydb}"
-      - "${DB_USER:-postgres}"
-      - "${DB_PASS:-yourpassword}"
+      DB_HOST: ${DB_HOST:-localhost}
+      DB_PORT: ${DB_PORT:-5432}
+      DB_NAME: ${DB_NAME:-mydb}
+      DB_USER: ${DB_USER:-postgres}
+      DB_PASS: ${DB_PASS:-yourpassword}
     command: >
-      bash -c "while inotifywait -e modify,create,delete -r src/; do
-                mvn compile;
-              done &
-              mvn spring-boot:run -Dspring-boot.run.fork=false -Dserver.port=8000"
+      bash -c "
+      APP_PID=0;
+      start() {
+        mvn spring-boot:run -Dspring-boot.run.fork=false -Dserver.port=8000 &
+        APP_PID=$!;
+      };
+      stop() {
+        if [ $APP_PID -ne 0 ]; then
+          kill $APP_PID;
+          wait $APP_PID 2>/dev/null;
+        fi;
+      };
+      start;
+      while true; do
+        inotifywait -r -e modify,create,delete src/;
+        echo 'Reloading...';
+        stop;
+        start;
+      done
+      "
     networks:
       - shared_network_144
+    profiles:
+      - dev
+
+  sping-postgres:
+    image: postgres:16
+    container_name: postgres
+    restart: unless-stopped
+    ports:
+      - '5439:${DB_PORT:-5439}'
+    environment:
+      POSTGRES_DB: ${DB_NAME:-mydb}
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASS:-yourpassword}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - shared_network_144
+    profiles:
+      - dev
+      - prod
 
 networks:
   shared_network_144:
     external: true
-    name: shared_network_144
+volumes:
+  postgres_data:
+
+# docker compose --profile dev down && docker compose --profile dev up -d
+# docker logs -f sping-dev
+# docker rm -f sping-dev

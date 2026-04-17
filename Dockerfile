@@ -1,5 +1,5 @@
-# docker build -t mdzenos/spring-core:1.0 .
-# docker push mdzenos/spring-core:1.0
+# docker build -t mdzenos/spring_core:1.0 .
+# docker push mdzenos/spring_core:1.0
 
 # Build Stage: Build fat jar
 FROM maven:4.0.0-rc-5-eclipse-temurin-17 AS build
