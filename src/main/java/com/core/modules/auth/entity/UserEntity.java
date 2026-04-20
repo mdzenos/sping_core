@@ -14,16 +14,14 @@ public class UserEntity {
     private String password;
 
     @PrePersist
-    public void prePersist() {
-        if (id == null) {
-            id = java.util.UUID.randomUUID().toString();
-        }
+    public void pre() {
+        if (id == null) id = UUID.randomUUID().toString();
     }
 
     public String getId() { return id; }
     public String getEmail() { return email; }
     public String getPassword() { return password; }
 
-    public void setEmail(String email) { this.email = email; }
-    public void setPassword(String password) { this.password = password; }
+    public void setEmail(String e) { this.email = e; }
+    public void setPassword(String p) { this.password = p; }
 }

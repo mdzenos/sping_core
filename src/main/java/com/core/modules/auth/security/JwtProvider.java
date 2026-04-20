@@ -1,40 +1,44 @@
 package com.core.modules.auth.security;
 
 import io.jsonwebtoken.*;
+import io.jsonwebtoken.security.Keys;
 import org.springframework.stereotype.Component;
 
+import javax.crypto.SecretKey;
+import java.nio.charset.StandardCharsets;
 import java.util.Date;
 
 @Component
 public class JwtProvider {
 
-    private final String SECRET = "secret-key";
+    private final String SECRET = "change-this-secret-key-change-this-secret-key";
 
-    private final long AT_EXP = 1000 * 60 * 15;
-    private final long RT_EXP = 1000L * 60 * 60 * 24 * 7;
+    private final SecretKey key =
+            Keys.hmacShaKeyFor(SECRET.getBytes(StandardCharsets.UTF_8));
 
     public String generateAT(String userId) {
-        return build(userId, AT_EXP);
+        return build(userId, 1000 * 60 * 15);
     }
 
     public String generateRT(String userId) {
-        return build(userId, RT_EXP);
+        return build(userId, 1000L * 60 * 60 * 24 * 7);
     }
 
     private String build(String userId, long exp) {
         return Jwts.builder()
-                .setSubject(userId)
-                .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + exp))
-                .signWith(SignatureAlgorithm.HS256, SECRET)
+                .subject(userId)
+                .issuedAt(new Date())
+                .expiration(new Date(System.currentTimeMillis() + exp))
+                .signWith(key)
                 .compact();
     }
 
     public String getUserId(String token) {
         return Jwts.parser()
-                .setSigningKey(SECRET)
-                .parseClaimsJws(token)
-                .getBody()
+                .verifyWith(key)
+                .build()
+                .parseSignedClaims(token)
+                .getPayload()
                 .getSubject();
     }
 }

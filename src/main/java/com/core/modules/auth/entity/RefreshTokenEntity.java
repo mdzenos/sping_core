@@ -18,17 +18,15 @@ public class RefreshTokenEntity {
     private boolean revoked = false;
 
     @PrePersist
-    public void prePersist() {
-        if (id == null) {
-            id = java.util.UUID.randomUUID().toString();
-        }
+    public void pre() {
+        if (id == null) id = UUID.randomUUID().toString();
     }
 
     public String getToken() { return token; }
     public String getUserId() { return userId; }
     public boolean isRevoked() { return revoked; }
 
-    public void setToken(String token) { this.token = token; }
-    public void setUserId(String userId) { this.userId = userId; }
-    public void setRevoked(boolean revoked) { this.revoked = revoked; }
+    public void setToken(String t) { this.token = t; }
+    public void setUserId(String u) { this.userId = u; }
+    public void setRevoked(boolean r) { this.revoked = r; }
 }

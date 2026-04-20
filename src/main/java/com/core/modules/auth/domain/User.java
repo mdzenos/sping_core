@@ -1,4 +1,4 @@
-package com.core.modules.auth.domain;
+package com.core.modules.auth.model;
 
 public class User {
     public String id;

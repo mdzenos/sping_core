@@ -1,7 +1,9 @@
 package com.core.modules.auth.service;
 
+import com.core.base.exception.BusinessException;
+import com.core.modules.auth.adapter.UserRepositoryAdapter;
 import com.core.modules.auth.entity.*;
-import com.core.modules.auth.repository.*;
+import com.core.modules.auth.repository.RefreshTokenJpaRepository;
 import com.core.modules.auth.security.JwtProvider;
 import com.core.shared.dto.*;
 import com.core.shared.util.PasswordHasher;
@@ -10,11 +12,11 @@ import org.springframework.stereotype.Service;
 @Service
 public class AuthService {
 
-    private final UserJpaRepository userRepo;
+    private final UserRepositoryAdapter userRepo;
     private final RefreshTokenJpaRepository refreshRepo;
     private final JwtProvider jwt;
 
-    public AuthService(UserJpaRepository userRepo,
+    public AuthService(UserRepositoryAdapter userRepo,
                        RefreshTokenJpaRepository refreshRepo,
                        JwtProvider jwt) {
         this.userRepo = userRepo;
@@ -22,23 +24,10 @@ public class AuthService {
         this.jwt = jwt;
     }
 
-    // ================= LOGIN =================
-    public AuthResponse login(AuthRequest req) {
-
-        UserEntity user = userRepo.findByEmail(req.email);
-
-        if (user == null || !PasswordHasher.match(req.password, user.getPassword())) {
-            throw new RuntimeException("Invalid credentials");
-        }
-
-        return generateTokens(user);
-    }
-
-    // ================= REGISTER =================
     public AuthResponse register(AuthRequest req) {
 
         if (userRepo.findByEmail(req.email) != null) {
-            throw new RuntimeException("Email already exists");
+            throw new BusinessException("Email already exists");
         }
 
         UserEntity user = new UserEntity();
@@ -47,53 +36,53 @@ public class AuthService {
 
         user = userRepo.save(user);
 
-        return generateTokens(user);
+        return issueTokens(user);
     }
 
-    // ================= REFRESH =================
-    public AuthResponse refresh(String refreshToken) {
+    public AuthResponse login(AuthRequest req) {
 
-        RefreshTokenEntity stored = refreshRepo.findByToken(refreshToken);
+        UserEntity user = userRepo.findByEmail(req.email);
 
-        if (stored == null || stored.isRevoked()) {
-            throw new RuntimeException("Invalid refresh token");
+        if (user == null || !PasswordHasher.match(req.password, user.getPassword())) {
+            throw new BusinessException("Invalid credentials");
         }
 
-        String userId = jwt.getUserId(refreshToken);
-
-        stored.setRevoked(true);
-        refreshRepo.save(stored);
-
-        UserEntity user = userRepo.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-
-        return generateTokens(user);
+        return issueTokens(user);
     }
 
-    // ================= LOGOUT =================
-    public void logout(String refreshToken) {
+    public AuthResponse refresh(String rt) {
 
-        RefreshTokenEntity stored = refreshRepo.findByToken(refreshToken);
+        RefreshTokenEntity old = refreshRepo.findByToken(rt);
 
-        if (stored != null) {
-            stored.setRevoked(true);
-            refreshRepo.save(stored);
+        if (old == null || old.isRevoked()) {
+            throw new BusinessException("Invalid refresh token");
+        }
+
+        old.setRevoked(true);
+        refreshRepo.save(old);
+
+        String userId = jwt.getUserId(rt);
+        UserEntity user = userRepo.findById(userId);
+
+        return issueTokens(user);
+    }
+
+    public void logout(String rt) {
+        RefreshTokenEntity token = refreshRepo.findByToken(rt);
+        if (token != null) {
+            token.setRevoked(true);
+            refreshRepo.save(token);
         }
     }
 
-    // ================= PROFILE =================
-    public ProfileResponse profile(String accessToken) {
-
-        String userId = jwt.getUserId(accessToken);
-
-        UserEntity user = userRepo.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+    public ProfileResponse profile(String at) {
+        String userId = jwt.getUserId(at);
+        UserEntity user = userRepo.findById(userId);
 
         return new ProfileResponse(user.getId(), user.getEmail());
     }
 
-    // ================= COMMON =================
-    private AuthResponse generateTokens(UserEntity user) {
+    private AuthResponse issueTokens(UserEntity user) {
 
         String at = jwt.generateAT(user.getId());
         String rt = jwt.generateRT(user.getId());
