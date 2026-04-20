@@ -8,7 +8,7 @@ services:
       - .env
     environment:
       DB_HOST: ${DB_HOST:-localhost}
-      DB_PORT: ${DB_PORT_CONTAINER:-5432}
+      DB_PORT: ${DB_PORT:-5432}
       DB_NAME: ${DB_NAME:-mydb}
       DB_USER: ${DB_USER:-postgres}
       DB_PASS: ${DB_PASS:-yourpassword}
@@ -33,7 +33,7 @@ services:
       - .env
     environment:
       DB_HOST: ${DB_HOST:-localhost}
-      DB_PORT: ${DB_PORT_CONTAINER:-5432}
+      DB_PORT: ${DB_PORT:-5432}
       DB_NAME: ${DB_NAME:-mydb}
       DB_USER: ${DB_USER:-postgres}
       DB_PASS: ${DB_PASS:-yourpassword}
@@ -48,7 +48,7 @@ services:
     container_name: postgres
     restart: unless-stopped
     ports:
-      - '${DB_PORT_HOST:-5439}:${DB_PORT_CONTAINER:-5432}'
+      - '${DB_PORT_EXPOSE:-5439}:${DB_PORT:-5432}'
     environment:
       POSTGRES_DB: ${DB_NAME:-mydb}
       POSTGRES_USER: ${DB_USER:-postgres}

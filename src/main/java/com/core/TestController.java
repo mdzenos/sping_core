@@ -6,8 +6,8 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class TestController {
 
-    @GetMapping("/test")
-    public String test() {
+    @GetMapping("/info")
+    public String info() {
         return "Spring Boot is running!";
     }
 }
