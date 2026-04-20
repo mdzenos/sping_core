@@ -43,7 +43,7 @@ services:
     profiles:
       - dev
 
-  sping-postgres:
+  spring-postgres:
     image: postgres:16
     container_name: postgres
     restart: unless-stopped
@@ -68,5 +68,5 @@ volumes:
   postgres_data:
 
 # docker compose --profile dev down && docker compose --profile dev up -d
-# docker logs -f sping-dev
-# docker rm -f sping-dev
+# docker logs -f spring-dev
+# docker rm -f spring-dev
