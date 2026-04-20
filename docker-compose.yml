@@ -3,12 +3,12 @@ services:
     image: mdzenos/spring_core:1.0
     container_name: spring-prod
     ports:
-      - '${APP_PORT:-8000}:8000'
+      - '${PROD_PORT:-8000}:8000'
     env_file:
       - .env
     environment:
       DB_HOST: ${DB_HOST:-localhost}
-      DB_PORT: ${DB_PORT:-5432}
+      DB_PORT: ${DB_PORT_CONTAINER:-5432}
       DB_NAME: ${DB_NAME:-mydb}
       DB_USER: ${DB_USER:-postgres}
       DB_PASS: ${DB_PASS:-yourpassword}
@@ -26,37 +26,18 @@ services:
       - ./src:/app/src
       - ./pom.xml:/app/pom.xml
       - ./.m2:/root/.m2
+      - ./dev.sh:/app/dev.sh
     ports:
       - '${DEV_PORT:-8001}:8000'
     env_file:
       - .env
     environment:
       DB_HOST: ${DB_HOST:-localhost}
-      DB_PORT: ${DB_PORT:-5432}
+      DB_PORT: ${DB_PORT_CONTAINER:-5432}
       DB_NAME: ${DB_NAME:-mydb}
       DB_USER: ${DB_USER:-postgres}
       DB_PASS: ${DB_PASS:-yourpassword}
-    command: >
-      bash -c "
-      APP_PID=0;
-      start() {
-        mvn spring-boot:run -Dspring-boot.run.fork=false -Dserver.port=8000 &
-        APP_PID=$!;
-      };
-      stop() {
-        if [ $APP_PID -ne 0 ]; then
-          kill $APP_PID;
-          wait $APP_PID 2>/dev/null;
-        fi;
-      };
-      start;
-      while true; do
-        inotifywait -r -e modify,create,delete src/;
-        echo 'Reloading...';
-        stop;
-        start;
-      done
-      "
+    command: bash dev.sh
     networks:
       - shared_network_144
     profiles:
@@ -67,7 +48,7 @@ services:
     container_name: postgres
     restart: unless-stopped
     ports:
-      - '5439:${DB_PORT:-5439}'
+      - '${DB_PORT_HOST:-5439}:${DB_PORT_CONTAINER:-5432}'
     environment:
       POSTGRES_DB: ${DB_NAME:-mydb}
       POSTGRES_USER: ${DB_USER:-postgres}
